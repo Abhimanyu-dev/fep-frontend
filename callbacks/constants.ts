@@ -1,5 +1,5 @@
 import { AxiosError, AxiosResponse } from "axios";
-export const STUDENT_AUTH_URL = `http://localhost:8087`;
+export const STUDENT_AUTH_URL = `http://localhost:3000`;
 export const ADMIN_PROJECT_URL = `http://localhost:3492`;
 
 export const SERVER_ERROR = "Aw, Snap! Server maybe down.";

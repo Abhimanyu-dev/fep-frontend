@@ -5,15 +5,15 @@ import {
   SERVER_ERROR,
   StatusResponse,responseBody
 } from "../../constants";
+import { errorNotification } from "@/callbacks/notification";
 export interface LoginStudentParams {
-  user_id: string;
+  email: string;
   password:string;
   remember_me:boolean;
 }
 export interface LoginResponse {
   token: string;
   role_id: number;
-  user_id: string;
 }
 const authInstance = axios.create({
   baseURL: STUDENT_AUTH_URL,
@@ -28,9 +28,11 @@ const studentLoginRequest = {
       LoginResponse,
       AxiosResponse<LoginResponse, LoginStudentParams>,
       LoginStudentParams
-    >("/api/auth/login", body)
+    >("/api/auth/user/login", body)
     .then(responseBody)
     .catch((err: ErrorType) => {
+      console.log("Login Failed")
+      errorNotification("Login Failed", err.response?.data?.error)
       return { user_id: "", token: "", role_id: 0 } as LoginResponse;
     }),
 };

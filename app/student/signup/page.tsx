@@ -1,166 +1,276 @@
-import { useState } from 'react';
-import '../../css/tailwind.css';
-import LoadingButton from '@mui/lab/LoadingButton';
-import Alert from '@mui/material/Alert';
-import Snackbar from '@mui/material/Snackbar';
-import { useForm } from "react-hook-form";
-import studentSignUpRequest, { SignUpStudentParams} from "../../../callbacks/auth/student/signup";
-import otpRequest, { OTPParams } from "../../../callbacks/auth/student/otp";
+import { Visibility, VisibilityOff } from "@mui/icons-material";  
+import LoadingButton from "@mui/lab/LoadingButton";
 import {
-  FieldError,
-  UseFormGetValues,
-  UseFormHandleSubmit,
-  UseFormRegister,
-} from "react-hook-form";
-export default function Home(){
-    const [isOTP,otpstage]=useState(true);
-    const [laodingotp,setloadingotp]=useState(false);
-    const [user,setUser]=useState("");
-    const [password,setPassword]=useState("");
-    const [otp,setOTP]=useState("");
-    const [message,setMessage]=useState("");
-    const [sevstatus,setsevstatus]=useState("success");
-    const [OpenedSnack,SetOpen]=useState(false);
-    const [loadingsignup,SetLoader]=useState(false);
-    const [finalpass,setFinal]=useState("");
-    const {
-      register:registerUser,
-      handleSubmit:handleSubmitUser,
-      formState: { errors }
-    } = useForm<SignUpStudentParams>();
-    const {
-      register: registerOTP,
-      handleSubmit: handleSubmitOTP,
-      getValues:gettervalues,
-      formState: { errors: errorsOTP },
-    } = useForm<OTPParams>();
-    const sendUser = async (data: SignUpStudentParams) => {
-      data.user_id=user;
-      data.password=password;
-      data.user_otp=otp;
-      setloadingotp(true);
-      const response = await studentSignUpRequest.post(data);
-      setsevstatus(response.request.status==200?"success":"error")
-      setMessage(response.request.status==200?response.data.status:"Wrong credentials");
-      SetOpen(true);
-      setloadingotp(false);
-      if(response.request.status==200){
-        window.location.href="/auth/login";
-      }
-    };
-    const sendOTP = async (data: OTPParams) => {
-      data.user_id=user;
-      SetLoader(true);
-      const response = await otpRequest.post(data);
-      setsevstatus(response.request.status==200?"success":"error")
-      setMessage(response.request.status==200?response.data.status:response.message);
-      otpstage(response.request.status!=200);
-      SetOpen(true);
-      SetLoader(false);
-    };
-    return (
-        <> 
-            <div style={{backgroundColor:'rgb(249, 250, 251)'}} className="w-full p-2">
-               <div className="w-full">
-                <center><img className='h-auto max-w-full' src="../images/logo.png" /></center>
-                </div>
-                <div className="w-full m-2">
-                <h1 className="mb-4 text-4xl font-extrabold leading-none tracking-tight md:text-5xl lg:text-6xl text-center font-sans w-full">Sign Up</h1>
-                </div>
-                <center>
-                <div className="md:w-full lg:w-6/12">
-                <div>
-                <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-lg">
-  {isOTP?<>
-    <div className="flex flex-wrap -mx-3 mb-6">
-    <div className="w-full px-3 mb-6 md:mb-0">
-      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
-        UserName
-      </label>
-      <input {...registerOTP("user_id", {
+  CircularProgress,
+  Collapse,
+  FormControl,
+  FormHelperText,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import React, { Suspense, useState } from "react";
+import { useForm } from "react-hook-form";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+
+import studentSignUpRequest, {
+  SignUpStudentParams,
+} from "@/callbacks/auth/student/signup";
+import otpRequest, { OTPParams } from "@/callbacks/auth/student/otp";
+import { useRouter } from "next/navigation";
+
+function SignUpStudent() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    getValues,
+  } = useForm<SignUpStudentParams>();
+
+  const {
+    register: registerOTP,
+    handleSubmit: handleSubmitOTP,
+    formState: { errors: errorsOTP },
+  } = useForm<OTPParams>();
+
+  const [emailStatus, setEmailStatus] = useState(false);
+  const [values, setValues] = useState({
+    showPassword: false,
+    showConfirmPassword: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignUp = async (data: SignUpStudentParams) => {
+    data.role_id = 100;
+    setLoading(true);
+    const response = await studentSignUpRequest.post(data);
+    if (response) {
+      router.push("/auth/login");
+    }
+    setLoading(false);
+  };
+
+  const handleClickShowPassword = (pass: string) => {
+    if (pass === "password") {
+      setValues({
+        ...values,
+        showPassword: !values.showPassword,
+      });
+    } else {
+      setValues({
+        ...values,
+        showConfirmPassword: !values.showConfirmPassword,
+      });
+    }
+  };
+
+  const handleMouseDownPassword = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+  };
+
+  const handleEmailOtpSubmit = async (data: OTPParams) => {
+    setValue("email", data.email);
+    setLoading(true);
+    const response = await otpRequest.post(data);
+    console.log(response)
+    setEmailStatus(response);
+    setLoading(false);
+  };
+
+  const capitalizeFirstLetter = (str: string) =>
+    str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+  const titleCase = (str: string) => {
+    const escapedStr = str.replace(/\s\s+/g, " ");
+    const splitStr = escapedStr
+      .trim()
+      .toLowerCase()
+      .split(" ")
+      .map(capitalizeFirstLetter);
+    return splitStr.join(" ");
+  };
+
+  return (
+    <div>
+      <Stack justifyContent="center" alignItems="center" spacing={2}>
+        <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+          <TextField
+            id="name"
+            label="Name"
+            variant="outlined"
+            disabled={emailStatus}
+            {...register("name", {
+              required: true,
+              setValueAs: (value) => titleCase(value),
+            })}
+            error={!!errors.name}
+            helperText={errors.name ? "Name is required!" : ""}
+          />
+        </FormControl>
+
+        <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+          <TextField
+            id="email"
+            label="IITK Email ID"
+            variant="outlined"
+            disabled={emailStatus}
+            {...registerOTP("email", {
               required: true,
               pattern: /^[^@]+@iitk\.ac\.in$/,
               setValueAs: (value) => value.trim().toLowerCase(),
-            })} id="user_id" onChange={(event)=>{setUser(event.currentTarget.value)}} disabled={!isOTP} className="appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-0 leading-tight focus:outline-none focus:bg-white" type="email" placeholder="mahirj23@iitk.ac.in" />
-            {errorsOTP.user_id?<span className="text-red-600 text-xs italic">Invalid IITK Email ID</span>:<></>}
-    </div>
-  </div>
-  <div className="flex flex-wrap -mx-3 mb-6">
-    <div className="w-full px-3">
-      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" >
-        Password
-      </label>
-      <input {...registerOTP("password", { required: true })} id="password" onChange={(event)=>{setPassword(event.currentTarget.value)}} disabled={!isOTP} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" type="password" placeholder="******************" />
-      {errorsOTP.password && (
-          <p className="text-red-600 text-xs italic">Incorrect Password</p>
-        )} 
-    </div>
-  </div>
-  <div className="flex flex-wrap -mx-3 mb-6">
-    <div className="w-full px-3">
-      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" >
-        Confirm Password
-      </label>
-      <input {...registerOTP("confirm_password", {
-            required: true,
-            validate: {
-              sameAsPassword: (value) => value === gettervalues("password"),
-            },
-          })} id="confirm-password" disabled={!isOTP} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" type="password" placeholder="******************" />
-     {errorsOTP.confirm_password && (
-           <p className="text-red-600 text-xs italic">Passwords do not match</p>
+            })}
+            error={!!errorsOTP.email}
+            helperText={errorsOTP.email ? "Invalid IITK Email ID" : ""}
+          />
+        </FormControl>
+
+        {!emailStatus && (
+          <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+            <LoadingButton
+              loading={loading}
+              variant="contained"
+              color="primary"
+              onClick={handleSubmitOTP(handleEmailOtpSubmit)}
+            >
+              Next
+            </LoadingButton>
+          </FormControl>
         )}
+
+        <Collapse in={emailStatus}>
+          <Suspense fallback={<CircularProgress />}>
+            <Stack>
+              <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+                <Typography variant="caption" sx={{ color: "#777" }}>
+                  An OTP has been sent to your <b>&lt;cc_id&gt;@iitk.ac.in</b>
+                </Typography>
+                <TextField
+                  id="OTP"
+                  label="OTP"
+                  variant="outlined"
+                  {...register("otp", {
+                    required: true,
+                    setValueAs: (otp) => {
+                      return parseInt(otp)
+                    }
+                  })}
+                  disabled={!emailStatus}
+                  error={!!errors.otp}
+                  helperText={errors.otp ? "OTP is required!" : ""}
+                ></TextField>
+              </FormControl>
+              <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+                <InputLabel
+                  htmlFor="outlined-adornment-password"
+                  error={!!errors.password}
+                >
+                  Password
+                </InputLabel>
+                <OutlinedInput
+                  id="password"
+                  error={!!errors.password}
+                  type={values.showPassword ? "text" : "password"}
+                  {...register("password", { required: true })}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => handleClickShowPassword("password")}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {values.showPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label="Password"
+                />
+                {errors.password && (
+                  <FormHelperText error={!!errors.password}>
+                    Incorrect password
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+                <InputLabel
+                  htmlFor="outlined-adornment-password"
+                  error={!!errors.confirm_password}
+                >
+                  Confirm Password
+                </InputLabel>
+                <OutlinedInput
+                  id="confirmPassword"
+                  error={!!errors.confirm_password}
+                  type={values.showConfirmPassword ? "text" : "password"}
+                  {...register("confirm_password", {
+                    required: true,
+                    validate: {
+                      sameAsPassword: (value) =>
+                        value === getValues("password"),
+                    },
+                  })}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() =>
+                          handleClickShowPassword("confirmPassword")
+                        }
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {values.showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label="Confirm Password"
+                />
+                {errors.confirm_password && (
+                  <FormHelperText error={!!errors.confirm_password}>
+                    Passwords don't match
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+                <LoadingButton
+                  loading={loading}
+                  variant="contained"
+                  onClick={handleSubmit(handleSignUp)}
+                >
+                  Sign Up
+                </LoadingButton>
+              </FormControl>
+            </Stack>
+          </Suspense>
+        </Collapse>
+        <FormControl sx={{ m: 1, width: "35ch" }} variant="outlined">
+          <Typography>
+            Already have an account?{" "}
+            <span style={{ color: "red" }}>
+              <Link href="/auth/login">Sign In</Link>
+            </span>
+          </Typography>
+        </FormControl>
+      </Stack>
     </div>
-  </div>
-  </>:<>
-  <div className="flex flex-wrap -mx-3 mb-6">
-    <div className="w-full px-3">
-      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" >
-        UserOTP
-      </label>
-      <input {...registerUser("user_otp",{required:true})} id="user_otp" disabled={isOTP} onChange={(event)=>{setOTP(event.currentTarget.value)}} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" type="text" value={otp} placeholder="123456" />
-      {errors.user_otp && (
-           <p className="text-red-600 text-xs italic">Enter OTP</p>
-        )}
-    </div>
-  </div>
-  </>}
-  <div className="flex items-center justify-between mt-6">
-      {isOTP?<>
-      <LoadingButton loading={loadingsignup} onClick={handleSubmitOTP(sendOTP)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
-       Sign Up
-      </LoadingButton>
-      </>:<>
-      <LoadingButton loading={laodingotp} onClick={handleSubmitUser(sendUser)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
-         Confirm
-      </LoadingButton>
-       <LoadingButton loading={false} onClick={()=>{otpstage(true);SetLoader(false);setloadingotp(false);}} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
-       Change User Id
-       </LoadingButton>
-      </>}
-      <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/auth/login">
-        Sign In
-      </a>
-    </div>
-</form>
-</div>
-                </div>
-                </center>
-            </div>
-    <Snackbar
-        open={OpenedSnack}
-        autoHideDuration={3000}
-        onClose={()=>{SetOpen(false)}}
-      >
-        <Alert
-    onClose={()=>{SetOpen(false)}}
-    severity={sevstatus}
-    variant="filled"
-    sx={{ width: '100%' }}
-  >
-   {message}
-  </Alert>
-      </Snackbar>
-        </>
-    )
+  );
 }
+
+export default SignUpStudent;

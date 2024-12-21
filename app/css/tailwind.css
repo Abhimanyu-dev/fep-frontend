@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 .contact_us{
-    background: url('../../public/images/contact.jpg') no-repeat center center/cover fixed;
+    /* background: url('../../public/images/contact.jpg') no-repeat center center/cover fixed; */
 }
 .contact_form{
     opacity: 0.4;

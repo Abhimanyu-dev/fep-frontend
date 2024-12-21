@@ -8,9 +8,7 @@ import {
 import { errorNotification, pushNotification } from "../../notification";
 
 export interface OTPParams {
-  user_id: string;
-  password:string;
-  confirm_password:string;
+  email: string;
 }
 const authInstance = axios.create({
   baseURL: STUDENT_AUTH_URL,
@@ -27,10 +25,12 @@ const otpRequest = {
         AxiosResponse<StatusResponse, OTPParams>,
         OTPParams>("/api/auth/otp", body)
       .then((res) => {
-        return res;
+        pushNotification("OTP Sent!", res.data.status);
+        return true;
       })
       .catch((err: ErrorType) => {
-        return err;
+        errorNotification("OTP request failed", err.response?.data?.error)
+        return false;
       }),
 };
 

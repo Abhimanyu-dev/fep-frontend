@@ -6,15 +6,17 @@ import {
   StatusResponse,
 } from "../../constants";
 export interface SignUpStudentParams {
-  user_id: string;
-  password:string;
-  confirm_password:string;
-  user_otp:string;
+  name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  role_id: number;
+  otp: number;
 }
 const authInstance = axios.create({
   baseURL: STUDENT_AUTH_URL,
   timeout: 15000,
-  withCredentials:true,
+  withCredentials: true,
   timeoutErrorMessage: SERVER_ERROR,
 });
 const studentSignUpRequest = {
@@ -24,7 +26,7 @@ const studentSignUpRequest = {
         StatusResponse,
         AxiosResponse<StatusResponse, SignUpStudentParams>,
         SignUpStudentParams
-      >("/api/auth/signup", body)
+      >("/api/auth/user/create", body)
       .then((res) => {
         return res;
       })
